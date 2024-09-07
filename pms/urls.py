@@ -25,6 +25,8 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # User urls
     path("user/", include("user.urls")),
+    # User urls
+    path("prescription/", include("prescription.urls")),
 ]
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 

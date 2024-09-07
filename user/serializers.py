@@ -10,6 +10,17 @@ from user.enums import UserStatusChoices, UserRoleChoices
 from user.utils import send_email
 
 
+class UserBasicSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField("get_role")
+
+    class Meta:
+        model = User
+        fields = ("id", "first_name", "last_name", "username", "email", "role")
+
+    def get_role(self, obj):
+        return obj.get_role_display()
+
+
 class UserSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField("get_role")
 
