@@ -40,7 +40,8 @@ class ForgetPasswordView(generics.GenericAPIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.data["email"]
-        user = User.objects.get(email=email)
+        role = serializer.data["role"]
+        user = User.objects.get(email=email, role=role)
         if not user.status == UserStatusChoices.ACTIVE.value:
             return Response(
                 {
@@ -67,6 +68,7 @@ class ForgetPasswordView(generics.GenericAPIView):
             {"data": f"Reset password link has been sent to you on {email}"},
             status=status.HTTP_200_OK,
         )
+
 
 @get_token_swagger()
 class ResetPasswordView(generics.GenericAPIView):
