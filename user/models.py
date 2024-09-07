@@ -9,8 +9,8 @@ class UserManager(BaseUserManager):
     use_in_migrations = True
 
     def _create_user(self, username, email, password, **extra_fields):
-        if not email:
-            raise ValueError("Users require an email field")
+        if not username:
+            raise ValueError("Users require username field")
         email = self.normalize_email(email)
         user = self.model(username=username, email=email, **extra_fields)
         user.set_password(password)
@@ -21,6 +21,7 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault("is_staff", False)
         extra_fields.setdefault("is_superuser", False)
         extra_fields.setdefault("is_active", True)
+        extra_fields.setdefault("status", enums.UserStatusChoices.ACTIVE.value)
         extra_fields.setdefault("role", 3)
         return self._create_user(username, email, password, **extra_fields)
 
