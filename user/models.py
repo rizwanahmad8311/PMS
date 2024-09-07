@@ -58,10 +58,14 @@ class User(AbstractUser):
     )
     birthday = models.DateField(blank=True, null=True)
     age = models.PositiveIntegerField(blank=True, null=True)
+    is_verified = models.BooleanField(default=False)
     objects = UserManager()
 
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["email"]
+
+    class Meta:
+        unique_together = ["email", "role"]
 
     def get_role(self):
         return self.get_role_display()

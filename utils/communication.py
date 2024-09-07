@@ -1,16 +1,17 @@
 from django.core.mail import send_mail, get_connection
 from django.template.loader import render_to_string
 from utils import EmailException
+from django.conf import settings
 
 
-def send_mail_using_smtp(smtp_config, email_data):
+def send_mail_using_smtp(email_data):
     try:
         connection = get_connection(
-            backend=smtp_config.get("EMAIL_BACKEND"),
-            host=smtp_config.get("EMAIL_HOST"),
-            port=smtp_config.get("EMAIL_PORT"),
-            username=smtp_config.get("EMAIL_HOST_USER"),
-            password=smtp_config.get("EMAIL_HOST_PASSWORD"),
+            backend=settings.EMAIL_BACKEND,
+            host=settings.EMAIL_HOST,
+            port=settings.EMAIL_PORT,
+            username=settings.EMAIL_HOST_USER,
+            password=settings.EMAIL_HOST_PASSWORD,
             use_tls=True,
         )
         send_mail(

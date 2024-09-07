@@ -6,7 +6,7 @@ from user.utils import arrange_permissions
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.auth.hashers import check_password
-from user.enums import UserStatusChoices
+from user.enums import UserStatusChoices, UserRoleChoices
 from user.utils import send_email
 
 
@@ -45,35 +45,40 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("username", "email", "password")
+        fields = ("first_name", "last_name", "username", "email", "password", "phone", "birthday", "age", "role")
 
     def create(self, validated_data):
-        user = User.objects.create_user(
-            username=validated_data.get("username"),
-            email=validated_data.get("email"),
-            password=validated_data.get("password"),
-        )
+        role = validated_data.get("role")
+        if role == UserRoleChoices.PATIENT.value:
+            user = User.objects.create_patient(**validated_data)
+        elif role == UserRoleChoices.DOCTOR.value:
+            user = User.objects.create_doctor(**validated_data)
+        else:
+            raise serializers.ValidationError({"invalid": ["Please choose correct role"]})
         send_email(user, validated_data.get("password"))
         return user
 
 
 class ForgetPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField()
+    role = serializers.IntegerField()
 
     class Meta:
-        fields = ("email",)
+        fields = ("email", "role")
 
 
 class ResetPasswordSerializer(serializers.Serializer):
     key = serializers.CharField()
     new_password = serializers.CharField()
     confirm_password = serializers.CharField()
+    role = serializers.IntegerField()
 
     class Meta:
         fields = (
             "key",
             "new_password",
             "confirm_password",
+            "role"
         )
         write_only_fields = ("key", "new_password", "confirm_password")
 
@@ -81,11 +86,12 @@ class ResetPasswordSerializer(serializers.Serializer):
         encoded_user = data.get("key")
         new_password = data.get("new_password")
         confirm_password = data.get("confirm_password")
+        role = data.get("role")
         token = self.context.get("request").headers.get("Authorization")
         if not token:
             raise serializers.ValidationError("Token is required")
         decoded_user = urlsafe_base64_decode(encoded_user).decode()
-        user = User.objects.get(email=decoded_user)
+        user = User.objects.get(email=decoded_user, role=role)
         if not PasswordResetTokenGenerator().check_token(user, token):
             raise serializers.ValidationError("The reset token is expired or invalid")
         if new_password != confirm_password:
@@ -101,12 +107,14 @@ class UpdatePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField()
     new_password = serializers.CharField()
     confirm_password = serializers.CharField()
+    role = serializers.IntegerField()
 
     class Meta:
         fields = (
             "old_password",
             "new_password",
             "confirm_password",
+            "role"
         )
         write_only_fields = ("old_password", "new_password", "confirm_password")
 
@@ -116,7 +124,8 @@ class UpdatePasswordSerializer(serializers.Serializer):
         old_password = data.get("old_password")
         new_password = data.get("new_password")
         confirm_password = data.get("confirm_password")
-        user = User.objects.get(email=email)
+        role = data.get("role")
+        user = User.objects.get(email=email, role=role)
         if not check_password(old_password, user.password):
             raise serializers.ValidationError("old password is incorrect")
         if new_password != confirm_password:
@@ -127,10 +136,3 @@ class UpdatePasswordSerializer(serializers.Serializer):
         user.status = UserStatusChoices.ACTIVE.value
         user.save()
         return data
-
-
-class ResendInviteSerializer(serializers.Serializer):
-    email = serializers.EmailField(write_only=True, required=True)
-
-    class Meta:
-        fields = ("email",)

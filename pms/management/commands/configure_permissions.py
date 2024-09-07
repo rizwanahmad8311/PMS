@@ -7,18 +7,13 @@ from user.models import ModulePermission
 class Command(BaseCommand):
     def handle(self, *args, **options):
         module_map = {
-            "case": "Case",
-            "profile": "Employee_Management",
-            "practicearea": "Practice_Area",
-            "client": "Client",
-            "task": "Task",
-            "media": "Document",
-            "billing": "Billing",
+            "user": "User",
         }
-        app_name = ["case", "task", "media", "billing"]
-        model_name = ["practicearea", "client", "profile"]
+        app_name = ["user"]
+        model_name = ["user"]
 
         content_type_ids = {}
+        data = None
         if model_name:
             for model in model_name:
                 content_types = ContentType.objects.filter(model=model.lower())
@@ -27,7 +22,7 @@ class Command(BaseCommand):
             for app in app_name:
                 content_types = ContentType.objects.filter(app_label=app)
                 content_type_ids.update(
-                    {app: [ct.id for ct in content_types if ct.model != "practicearea"]}
+                    {app: [ct.id for ct in content_types]}
                 )
         for key, value_list in content_type_ids.items():
             view_permission_ids = []

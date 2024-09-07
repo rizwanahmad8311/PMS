@@ -29,12 +29,7 @@ def send_email(instance, password):
 
 def arrange_permissions(permissions: list):
     module_map = {
-        "case": "Case",
-        "profile": "Employee_Management",
-        "practicearea": "Practice_Area",
-        "client": "Client",
-        "task": "Task",
-        "media": "Document",
+        "user": "User",
     }
     converted_permissions = []
     for permission in permissions:
